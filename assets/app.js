@@ -56,8 +56,6 @@ function mount(){const v=S.view;const small=innerWidth<=600;const dev=small?'mob
    <div class="pseg"><button class="${v.role==='shop'?'on':''}" onclick="go('shop',S.r.shop.n,S.r.shop.p)">${ic('cart','sm')}<span class="plbl">Shopper</span></button><button class="${v.role==='seller'?'on':''}" onclick="go('seller',S.r.seller.n,S.r.seller.p)">${ic('store','sm')}<span class="plbl">Seller</span></button></div>
    <div class="pseg dev"><button class="${v.device==='desktop'?'on':''}" onclick="S.view.device='desktop';mount()">${ic('monitor','sm')}<span class="plbl">Desktop</span></button><button class="${v.device==='mobile'?'on':''}" onclick="S.view.device='mobile';mount()">${ic('phone','sm')}<span class="plbl">Mobile</span></button></div>
    <span class="sp"></span>
-   <button class="pbtn hl" onclick="go('shop','home')">1 · <span class="plbl">Buy a product</span></button>
-   <button class="pbtn hl" onclick="UI.draft=null;go('seller','add')">2 · <span class="plbl">List a product</span></button>
    <button class="pbtn" onclick="reset()" aria-label="Reset demo">${ic('refresh','sm')}</button>`;
   $('#stage').className='stage '+(dev==='desktop'?'solo-desktop':'');
   $('#stage').innerHTML=dev==='mobile'?`<div class="phone"><div class="frame" data-dev="mobile"></div></div>`:`<div class="desk"><div class="frame" data-dev="desktop"></div></div>`;
