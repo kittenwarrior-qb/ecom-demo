@@ -186,6 +186,7 @@ const ICONS={
  list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
  mega:'<path d="M3 11v3l12 5V6L3 11zM15 8h2a4 4 0 0 1 0 8h-2M6 14l1 6h3l-1-5"/>',
  layers:'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+ play:'<path d="M7 4v16l13-8z"/>',
  chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
  ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
 };
@@ -200,7 +201,7 @@ const mono=(s,cls='')=>`<span class="mono ${cls}" style="--h:${s.hue}">${esc(s.m
 
 /* ---------- shared bits ---------- */
 function stars(v,cls=''){return `<span class="stars ${cls}" style="--v:${v}" aria-label="${v} out of 5 stars"></span>`}
-function priceHTML(n,cls='s'){const [w,c]=(+n).toFixed(2).split('.');return `<span class="price ${cls}" aria-label="${money(n)}"><span class="cur">$</span><span class="whole">${(+w).toLocaleString('en-US')}</span><span class="cts">${c}</span></span>`}
+function priceHTML(n,cls='s'){const [w,c]=(+n).toFixed(2).split('.');return `<span class="price ${cls}" aria-label="${money(n)}"><span class="cur">$</span><span class="whole">${(+w).toLocaleString('en-US')}</span><span class="cts">.${c}</span></span>`}
 function rateRow(p,short){return `<span class="rate">${short?`<b>${p.rating}</b>`:''}${stars(p.rating)}<span class="n">${num(p.reviews)}</span></span>`}
 const STATUS={
  unshipped:['Not yet shipped','Chưa giao','warn'],shipped:['Shipped','Đang giao','info'],delivered:['Delivered','Đã giao','ok'],
@@ -262,10 +263,11 @@ function toast(msg,icon='check'){const host=$('#toasts');const el=document.creat
 function renderBar(){const v=S.view;const small=isSmall();
   const role=(k,i,l)=>`<button class="${(v.device==='split'?(k==='buyer'||k===v.ops):v.role===k)?'on':''}" onclick="setRole('${k}')">${ic(i,'sm')}<span class="plbl">${l}</span></button>`;
   const dev=(k,i,l)=>`<button class="${v.device===k?'on':''}" onclick="setDevice('${k}')" title="${l}">${ic(i,'sm')}<span class="plbl">${l}</span></button>`;
-  $('#pbar').innerHTML=`<div class="plogo">${BRAND.name.toLowerCase()}<b>.</b></div><div class="ptag"><b>Clickable prototype</b> · US multi-vendor marketplace<br>Demo data only · 35 screens</div>
+  $('#pbar').innerHTML=`<div class="plogo">${BRAND.name.toLowerCase()}<b>.</b></div><div class="ptag"><b>Clickable prototype</b> · US multi-vendor marketplace<br>Demo data only · 38 screens</div>
   <div class="pseg" role="tablist" aria-label="Role">${role('buyer','cart','Shopper')}${role('seller','store','Seller Central')}${role('admin','shield','Admin')}</div>
   <div class="pseg dev" aria-label="Device">${dev('desktop','monitor','Desktop')}${dev('mobile','phone','Mobile')}${dev('split','split','Shopper + Ops')}</div>
   <div class="sp"></div>
+  <button class="pbtn hl" onclick="showTour()">${ic('play','sm')}<span class="plbl">Demo tour</span></button>
   <button class="pbtn" onclick="showSitemap()">${ic('map','sm')}<span class="plbl">Screens</span></button>
   <button class="pbtn" onclick="toggleTheme()" aria-label="Toggle dark mode">${ic(isDark()?'sun':'moon','sm')}</button>
   <button class="pbtn" onclick="resetDemo()" title="Reset demo data" aria-label="Reset demo data">${ic('refresh','sm')}</button>`}
@@ -279,7 +281,7 @@ function setLang(l){S.lang=l;document.documentElement.lang=l;rerenderAllFrames()
 const SITEMAP={
  buyer:[['home','Home',{}],['categories','All categories (mobile menu)',{}],['search','Search results & filters',{q:'rice cooker'}],['deals',"Today's Deals",{}],['product','Product detail',{id:'k1'}],['store','Seller storefront',{id:'s1'}],['cart','Cart',{}],['signin','Sign in',{}],['register','Create account',{}],['checkout','Checkout',{}],['success','Order placed',{}],['orders','Your Orders',{}],['order','Order details & tracking',{}],['return','Return items',{}],['review','Write a review',{id:'k1'}],['account','Your Account',{}],['addresses','Addresses',{}],['payments','Payment methods',{}],['lists','Your Lists',{}]],
  seller:[['onboard','Register a business (KYB)',{}],['dashboard','Dashboard',{}],['listings','Manage listings',{}],['add','Add a product',{}],['bulk','Bulk upload (CSV)',{}],['orders','Manage orders',{}],['order','Order details & shipping label',{}],['returns','Returns',{}],['payments','Payments & payouts',{}],['feedback','Customer questions',{}],['settings','Store settings',{}]],
- admin:[['dashboard','Marketplace overview',{}],['sellers','Seller applications (KYB)',{}],['moderation','Listing moderation',{}],['claims','A-to-z claims',{}],['catalog','Categories & fees',{}],['content','Homepage content',{}],['team','Team & roles',{}]],
+ admin:[['dashboard','Marketplace overview',{}],['sellers','Seller applications (KYB)',{}],['moderation','Listing moderation',{}],['claims','A-to-z claims',{}],['orders','Orders lookup',{}],['catalog','Categories & fees',{}],['content','Homepage content',{}],['team','Team & roles',{}]],
 };
 function showSitemap(){const role=S.view.device==='split'?'buyer':S.view.role;
   const col=(t,sub,k)=>`<div class="c"><h4>${t} <span class="faint">(${SITEMAP[k].length})</span></h4><div class="xs muted mb8">${sub}</div>${SITEMAP[k].map(([n,l,p])=>`<button onclick="jump('${k}','${n}',${J(p)})">${ic('chev','sm')}${l}</button>`).join('')}</div>`;
@@ -290,6 +292,22 @@ function jump(role,n,p){UI.ov={};
   if(role==='seller'&&n==='order')p={id:S.orders.find(o=>o.seller===S.seller.shop&&o.status==='unshipped')?.id||S.orders.find(o=>o.seller===S.seller.shop).id};
   if(role==='seller'&&n==='add')UI.tmp.ep=null;
   go(role,n,p);renderAll()}
+
+/* ---------- demo tour (for client meetings) ---------- */
+const TOUR=[
+ ['The storefront','Editorial home, verified sellers, deals checked against 90-day prices.',()=>{S.lang='en';S.view={...S.view,role:'buyer',device:'desktop'};S.r.buyer={n:'home',p:{},h:[]}}],
+ ['Built for Vietnamese-American shoppers','One tap switches the whole store, reviews and support to Tiếng Việt.',()=>{S.lang='vi';S.view={...S.view,role:'buyer',device:'desktop'};S.r.buyer={n:'home',p:{},h:[]}}],
+ ['Product page on mobile','Same code, phone layout. Delivery date, price history note, trust signals.',()=>{S.lang='en';S.view={...S.view,role:'buyer',device:'mobile'};S.r.buyer={n:'product',p:{id:'k1'},h:[{n:'home',p:{}}]}}],
+ ['Checkout, split by seller','One checkout, one package per business, sales tax by state.',()=>{S.lang='en';if(!S.buyer.cart.length)S.buyer.cart.push({pid:'k1',v:'White',q:1});S.buyer.signedIn=true;S.view={role:'buyer',device:'split',ops:'seller'};S.r.buyer={n:'checkout',p:{},h:[{n:'cart',p:{}}]};S.r.seller={n:'orders',p:{tab:'unshipped'},h:[]}}],
+ ['Seller ships the order','Place the order on the phone, then buy a label in Seller Central. Tracking updates live.',()=>{S.lang='en';S.view={role:'buyer',device:'split',ops:'seller'};S.r.seller={n:'orders',p:{tab:'unshipped'},h:[]};S.r.buyer={n:'orders',p:{},h:[]}}],
+ ['Listing a product','Fees, profit and listing quality update as the business types. Vietnamese title built in.',()=>{UI.tmp.ep=null;S.view={...S.view,role:'seller',device:'desktop'};S.r.seller={n:'add',p:{},h:[{n:'dashboard',p:{}}]}}],
+ ['Onboarding a new business','KYB in five steps: EIN, owner ID, bank, W-9, store.',()=>{S.view={...S.view,role:'seller',device:'desktop'};S.r.seller={n:'onboard',p:{},h:[]}}],
+ ['Trust & safety','Admin approves businesses, removes risky listings and settles A-to-z claims.',()=>{S.view={...S.view,role:'admin',device:'desktop'};S.r.admin={n:'dashboard',p:{},h:[]}}],
+ ['Marketplace controls','Change a referral fee or the homepage banner and see it everywhere.',()=>{S.view={...S.view,role:'admin',device:'desktop'};S.r.admin={n:'catalog',p:{},h:[]}}],
+];
+function showTour(){const role=S.view.device==='split'?'buyer':S.view.role;
+  openOv(role,`<div class="modal wide">${mHead(role,'Demo tour · about 10 minutes')}<div class="modal-b"><p class="sm muted mb16">Follow the story in order. Each step opens the right screen and view. Reset demo data first for a clean run.</p><div class="tour">${TOUR.map(([t,d],i)=>`<div class="st"><i>${i+1}</i><div><b>${t}</b><span>${d}</span></div><button class="btn sm ink" onclick="tourGo(${i})">Open</button></div>`).join('')}</div></div></div>`)}
+function tourGo(i){UI.ov={};UI.notif=null;TOUR[i][2]();save();mount();toast(`Step ${i+1}: ${TOUR[i][0]}`,'play')}
 
 /* ---------- boot ---------- */
 function boot(){mount();let w=innerWidth;addEventListener('resize',()=>{const s=innerWidth<=600;if(s!==(w<=600)){w=innerWidth;mount()}else w=innerWidth})}
